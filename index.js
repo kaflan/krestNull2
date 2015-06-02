@@ -85,8 +85,20 @@ window.addEventListener('load', function load() {
         divRow.appendChild(divCell);
       }
     }
+    save();
   }; // create fields
-  var save = function(){};
+  var num = function(){
+    inputVal = count.value;
+    size = +inputVal;
+    state.game.push[size];
+  };
+  var save = function(){
+    for(i = 0; i < state.game.length; i++){
+      state.game.push[i];
+      num();
+    }
+    localStorage.setItem('data', JSON.stringify(state));
+  };
   startNewGame.addEventListener('click', clickNewGame);
   generateField.addEventListener('click', createFields);
   count.addEventListener('keyup', function (event) {
