@@ -1,29 +1,20 @@
 /* global getWinner */
-var game = {
-  position: [],
-  size: null
-}; // local storage
-var loadState = localStorage.getItem('game');
-if (loadState) {
-  game = JSON.parse(loadState);
-}
+var game = null;
+
 window.addEventListener('load', function load() {
   'use strict';
-  var cellAll; // у массіві всі наші класси целл
   var nextClass;// хранить класс правильний по кліку фраєра змінюєця поточний клас сім матерів бабі в цицьку
   var i;
   var j;
   var winner;
-  var inputVal;
-  var size = game.size;
-  var field = document.querySelector('.field');
   var winnerEl = document.querySelector('.winner-message');
   var startNewGame = document.querySelector('.startNewGame');
-  var startGame = document.querySelector('.startGame');
   var generateField = document.querySelector('.generateField');
   var errMessage = document.querySelector('.error-message');
-  var mainGame = document.querySelector('.mainGame');
   var count = document.querySelector('.count');
+  var field = document.querySelector('.field');
+  var mainGame = document.querySelector('.mainGame');
+  var startGame = document.querySelector('.startGame');
   var createDiv = function () {
     return document.createElement('div');
   };//function create div
@@ -32,13 +23,36 @@ window.addEventListener('load', function load() {
   }; // add class to div
   var addCellClass = function (div) {
     div.classList.add('cell');
-  };// add class to div
+  };
+
+  var saveState = function () {
+    localStorage.setItem('game', JSON.stringify(game));
+  };
+  var loadState = function () {
+    game = JSON.parse(localStorage.getItem('game'));
+  };
+
+  var createFields = function () {
+    localStorage.clear();
+    var inputVal = count.value;
+    var size = +inputVal;
+    if (isNaN(size) || size < 5 || size > 15) {
+      errMessage.innerHTML = 'Вы ввели некорректное число';
+      return;
+    }
+    game = {
+      state: [],
+      size: size
+    };
+
+    drawField();
+  }; // create fields
   var clickEvent = function (event) {
     event.preventDefault();
     if ((event.target.classList.contains('x') || event.target.classList.contains('o'))) {
       return;
     }
-    if ((!event.target.classList.contains('cell') || event.target.classList.contains('field'))) {
+    if ((!event.target.classList.contains('cell'))) {
       return;
     }
     if (nextClass === 'x') {
@@ -48,60 +62,53 @@ window.addEventListener('load', function load() {
       nextClass = 'x'; // міша зливай воду  міняїм на "х"
     }
     event.target.classList.add(nextClass);
+    game.state[event.target.attributes["data-index"]] = nextClass;
+    saveState();
     winner = getWinner();
     if (winner === 'x') {
       winnerEl.innerHTML = 'Крестик победил';
       field.removeEventListener('click', clickEvent);
-    } else if (winner === 'o') {
+    }
+    else if (winner === 'o') {
       winnerEl.innerHTML = 'Нолик победил';
       field.removeEventListener('click', clickEvent);
     }
-  }; // click to event x o;
-  var clickNewGame = function (e) {
-    e.preventDefault();
-    mainGame.style.display = 'none';
-    startGame.style.display = 'inline-block';
-    cellAll = document.querySelectorAll('.cell');
-    nextClass = '';
-    winnerEl.innerHTML = '';
-    field.addEventListener('click', clickEvent);
-  }; // start to new game click
-  var createFields = function () {
-    //if(game.size[0]) {
-    //  size = +game.size[0];
-    //}
-    localStorage.clear();
-    inputVal = count.value;
-    size = +inputVal;
-    field.innerHTML = '';
-    if (isNaN(size) || size < 5 || size > 15) {
-      errMessage.innerHTML = 'Вы ввели некорректное число';
-      return;
-    }
-    mainGame.style.display = 'inline-block';
-    startGame.style.display = 'none';
-    console.log(size);
-    game.size = size;
-    for (i = 0; i < size; i++) {
+  };
+  var drawField = function () {
+    for (i = 0; i < game.size; i++) {
       var divRow = createDiv();
       addRowClass(divRow);
       field.appendChild(divRow);
-      for (j = 0; j < size; j++) {
+      for (j = 0; j < game.size; j++) {
         var divCell = createDiv();
         addCellClass(divCell);
+        var pos = i + j * game.size;
+        var curCellState = game.state[pos];
+        if (curCellState === 'x') {
+          divCell.classList.add('x');
+        }
+        else if (curCellState === 'o') {
+          divCell.classList.add('o');
+        }
+        divCell.attributes["data-index"] = ''+pos;
         divRow.appendChild(divCell);
+        divCell.addEventListener('click', clickEvent);
       }
     }
-    saveState();
-  }; // create fields
-  var saveState = function () {
-    localStorage.setItem('game', JSON.stringify(game));
+    mainGame.style.display = 'inline-block';
+    startGame.style.display = 'none';
   };
-  if (game.size){
-    count.value = game.size;
-    return createFields();
+  loadState();
+  if (game !== null) {
+    drawField();
   }
-  console.log(game.size);
+  var clickNewGame = function (e) {
+    e.preventDefault();
+    localStorage.clear();
+    mainGame.style.display = 'none';
+    startGame.style.display = 'inline-block';
+  }; // start to new game click
+
   startNewGame.addEventListener('click', clickNewGame);
   generateField.addEventListener('click', createFields);
   count.addEventListener('keyup', function (event) {
