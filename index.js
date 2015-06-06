@@ -33,7 +33,6 @@ window.addEventListener('load', function load() {
   };
 
   var createFields = function () {
-    localStorage.clear();
     var inputVal = count.value;
     var size = +inputVal;
     if (isNaN(size) || size < 5 || size > 15) {
@@ -44,7 +43,6 @@ window.addEventListener('load', function load() {
       state: [],
       size: size
     };
-
     drawField();
   }; // create fields
   var clickEvent = function (event) {
@@ -53,6 +51,9 @@ window.addEventListener('load', function load() {
       return;
     }
     if ((!event.target.classList.contains('cell'))) {
+      return;
+    }
+    if (getWinner()){
       return;
     }
     if (nextClass === 'x') {
@@ -65,13 +66,15 @@ window.addEventListener('load', function load() {
     game.state[event.target.attributes["data-index"]] = nextClass;
     saveState();
     winner = getWinner();
-    if (winner === 'x') {
-      winnerEl.innerHTML = 'Крестик победил';
-      field.removeEventListener('click', clickEvent);
-    }
-    else if (winner === 'o') {
-      winnerEl.innerHTML = 'Нолик победил';
-      field.removeEventListener('click', clickEvent);
+    if (winner) {
+      if (winner === 'x') {
+        winnerEl.innerHTML = 'Крестик победил';
+        field.removeEventListener('click', clickEvent);
+      }
+      else if (winner === 'o') {
+        winnerEl.innerHTML = 'Нолик победил';
+        field.removeEventListener('click', clickEvent);
+      }
     }
   };
   var drawField = function () {
@@ -90,7 +93,7 @@ window.addEventListener('load', function load() {
         else if (curCellState === 'o') {
           divCell.classList.add('o');
         }
-        divCell.attributes["data-index"] = ''+pos;
+        divCell.attributes["data-index"] = '' + pos;
         divRow.appendChild(divCell);
         divCell.addEventListener('click', clickEvent);
       }
@@ -102,13 +105,14 @@ window.addEventListener('load', function load() {
   if (game !== null) {
     drawField();
   }
-  var clickNewGame = function (e) {
-    e.preventDefault();
-    localStorage.clear();
+  var clickNewGame = function () {
+    field.innerHTML = '';
+    winnerEl.innerHTML = '';
     mainGame.style.display = 'none';
     startGame.style.display = 'inline-block';
+    localStorage.clear();
   }; // start to new game click
-
+  field.addEventListener('click', clickEvent);
   startNewGame.addEventListener('click', clickNewGame);
   generateField.addEventListener('click', createFields);
   count.addEventListener('keyup', function (event) {
