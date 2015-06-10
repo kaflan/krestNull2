@@ -5,6 +5,7 @@ window.addEventListener('load', function load() {
   'use strict';
   var nextClass;// хранить класс правильний по кліку фраєра змінюєця поточний клас сім матерів бабі в цицьку
   var i;
+  var message = '';
   var j;
   var winner;
   var winnerEl = document.querySelector('.winner-message');
@@ -15,108 +16,131 @@ window.addEventListener('load', function load() {
   var field = document.querySelector('.field');
   var mainGame = document.querySelector('.mainGame');
   var startGame = document.querySelector('.startGame');
-  var createDiv = function () {
+  var divRow;
+  var divCell;
+  var pos;
+  var curCellState;
+
+  function createDiv() {
     return document.createElement('div');
-  };//function create div
-  var addRowClass = function (div) {
+  } // function create div
+  function addRowClass(div) {
     div.classList.add('row');
-  }; // add class to div
-  var addCellClass = function (div) {
+  } // add class to div
+  function addCellClass(div) {
     div.classList.add('cell');
-  };
+  }
 
-  var saveState = function () {
+  function saveState() {
     localStorage.setItem('game', JSON.stringify(game));
-  };
-  var loadState = function () {
-    game = JSON.parse(localStorage.getItem('game'));
-  };
+  }
 
-  var createFields = function () {
-    var inputVal = count.value;
-    var size = +inputVal;
-    if (isNaN(size) || size < 5 || size > 15) {
-      errMessage.innerHTML = 'Вы ввели некорректное число';
-      return;
-    }
-    game = {
-      state: [],
-      size: size
-    };
-    drawField();
-  }; // create fields
-  var clickEvent = function (event) {
-    event.preventDefault();
-    if ((event.target.classList.contains('x') || event.target.classList.contains('o'))) {
-      return;
-    }
-    if ((!event.target.classList.contains('cell'))) {
-      return;
-    }
-    if (getWinner()){
-      return;
-    }
-    if (nextClass === 'x') {
-      nextClass = 'o';
-    } else {
-      // міняєм класс на "о"
-      nextClass = 'x'; // міша зливай воду  міняїм на "х"
-    }
-    event.target.classList.add(nextClass);
-    game.state[event.target.attributes["data-index"]] = nextClass;
-    saveState();
+  function loadState() {
+    game = JSON.parse(localStorage.getItem('game'));
+  }
+
+  function win() {
     winner = getWinner();
     if (winner) {
       if (winner === 'x') {
-        winnerEl.innerHTML = 'Крестик победил';
-        field.removeEventListener('click', clickEvent);
+        message = 'Крестик победил';
       }
-      else if (winner === 'o') {
-        winnerEl.innerHTML = 'Нолик победил';
-        field.removeEventListener('click', clickEvent);
+      if (winner === 'o') {
+        message = 'Нолик победил';
       }
+      return message;
     }
-  };
-  var drawField = function () {
+    return message;
+  }
+
+  function drawField() {
     for (i = 0; i < game.size; i++) {
-      var divRow = createDiv();
+      divRow = createDiv();
       addRowClass(divRow);
       field.appendChild(divRow);
       for (j = 0; j < game.size; j++) {
-        var divCell = createDiv();
+        divCell = createDiv();
         addCellClass(divCell);
-        var pos = i + j * game.size;
-        var curCellState = game.state[pos];
+        pos = i + j * game.size;
+        curCellState = game.state[pos];
         if (curCellState === 'x') {
           divCell.classList.add('x');
         }
-        else if (curCellState === 'o') {
+        if (curCellState === 'o') {
           divCell.classList.add('o');
         }
-        divCell.attributes["data-index"] = '' + pos;
+        divCell.attributes['data-index'] = '' + pos;
         divRow.appendChild(divCell);
-        divCell.addEventListener('click', clickEvent);
       }
     }
+    game.winner = win();
+    winnerEl.innerHTML = game.winner;
     mainGame.style.display = 'inline-block';
     startGame.style.display = 'none';
-  };
+    mainGame.style.display = 'inline-block';
+    startGame.style.display = 'none';
+  }
+
+  function createFields() {
+    var inputVal = count.value;
+    var size = +inputVal;
+
+    if (isNaN(size) || size < 5 || size > 15 || size % 1 !== 0) {
+      errMessage.innerHTML = 'Вы ввели некорректное число';
+      return false;
+    }
+    game = {
+      state: [],
+      size: size,
+      next: '',
+      winner: ''
+    };
+    drawField();
+    saveState();
+  } // create fields
+  function clickEvent(event) {
+    if ((event.target.classList.contains('x') || event.target.classList.contains('o'))) {
+      return false;
+    }
+    if ((!event.target.classList.contains('cell'))) {
+      return false;
+    }
+    if (getWinner()) {
+      return false;
+    }
+    nextClass = game.next;
+    if (nextClass === 'x') {
+      nextClass = 'o';
+    } else {
+      nextClass = 'x';
+    }// міша зливай воду  міняїм на "х"
+    event.target.classList.add(nextClass);
+    game.state[event.target.attributes['data-index']] = nextClass;
+    game.next = nextClass;
+    win();
+    game.winner = win();
+    winnerEl.innerHTML = game.winner;
+    saveState();
+  }
+
   loadState();
   if (game !== null) {
     drawField();
   }
-  var clickNewGame = function () {
+  function clickNewGame() {
+    localStorage.clear('game');
     field.innerHTML = '';
     winnerEl.innerHTML = '';
     mainGame.style.display = 'none';
     startGame.style.display = 'inline-block';
-    localStorage.clear();
-  }; // start to new game click
+    message = '';
+    localStorage.clear('game');
+  } // start to new game click
   field.addEventListener('click', clickEvent);
   startNewGame.addEventListener('click', clickNewGame);
   generateField.addEventListener('click', createFields);
-  count.addEventListener('keyup', function (event) {
+  count.addEventListener('keyup', function hand(event) {
     if (event.keyCode !== 13) return;
     createFields();
-  }); //keyup generete fields
+  });
 });
